@@ -65,10 +65,12 @@ export default class MyPlugin extends Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("右键菜单2")
+            .setTitle("开发中：上传此文章到 Github")
             .setIcon("lightbulb")
-            .onClick(() => {
-              console.log(34, file);
+            .onClick(async () => {
+              // console.log(34, file.basename, file);
+              const content = await file.vault.cachedRead(file);
+              console.log(36, content);
               new Notice("右键菜单2");
             });
         });
@@ -109,10 +111,17 @@ export default class MyPlugin extends Plugin {
     });
 
     // 命令面板注册
+    // this.addCommand({
+    //   id: "xxx-id",
+    //   name: "注册命令中文名",
+    //   callback: () => this.openMapView(),
+    // });
     this.addCommand({
-      id: "xxx-id",
-      name: "注册命令中文名",
-      callback: () => this.openMapView(),
+      id: "publish",
+      name: "上传到 Github",
+      callback: () => {
+        this.openMapView();
+      },
     });
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SampleSettingTab(this.app, this));
@@ -154,29 +163,45 @@ export default class MyPlugin extends Plugin {
 class SampleSettingTab extends PluginSettingTab {
   plugin: MyPlugin;
 
+  _appContainer: any;
+
   constructor(app: App, plugin: MyPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
+  hide() {
+    console.log("hide", this, this._appContainer);
+    this.containerEl.empty();
+    // this.appContainer.unmount();
+  }
 
   display(): void {
-    const { containerEl } = this;
+    console.log("this", this);
 
-    containerEl.empty();
+    // 挂在 DemoVue
 
-    containerEl.createEl("h2", { text: "这是一个 h2 标题" });
+    const _app = createApp(DemoVue);
 
-    new Setting(containerEl)
-      .setName("label1")
-      .setDesc("desc1")
-      .addText((text) =>
-        text
-          .setPlaceholder("默认暗文")
-          .setValue(this.plugin.settings.mySetting)
-          .onChange(async (value) => {
-            this.plugin.settings.mySetting = value;
-            await this.plugin.saveSettings();
-          })
-      );
+    _app.mount(this.containerEl);
+
+    // const app =
+    this._appContainer = _app;
+
+    // containerEl.empty();
+
+    // containerEl.createEl("h2", { text: "这是一个 h2 标题" });
+
+    // new Setting(containerEl)
+    //   .setName("label1")
+    //   .setDesc("desc1")
+    //   .addText((text) =>
+    //     text
+    //       .setPlaceholder("默认暗文")
+    //       .setValue(this.plugin.settings.mySetting)
+    //       .onChange(async (value) => {
+    //         this.plugin.settings.mySetting = value;
+    //         await this.plugin.saveSettings();
+    //       })
+    //   );
   }
 }
