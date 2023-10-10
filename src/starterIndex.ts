@@ -1,207 +1,266 @@
 import {
-  App,
   ItemView,
+  App,
   Menu,
   Notice,
-  Platform,
   Plugin,
+  Platform,
   PluginSettingTab,
-  Setting,
-  WorkspaceLeaf,
+  TFile,
+  TFolder,
 } from "obsidian";
-import { createApp, type ComponentPublicInstance } from "vue";
-
+import {
+  createApp,
+  type ComponentPublicInstance,
+  type App as VueApp,
+} from "vue";
 import DemoVue from "./ui/test.vue";
+import SettingTabPage from "./ui/settingTab.vue";
 
-const VIEW_TYPE = "vue-view";
-
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-  mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-  mySetting: "这是默认值",
+const debugFlag = true;
+const log = (...arg: any) => {
+  if (debugFlag) {
+    console.log(...arg);
+  }
 };
 
+/**
+ * 注册一个 ItemView
+ */
 class MyVueView extends ItemView {
+  // type form vue
   view!: ComponentPublicInstance;
-
-  getViewType(): string {
-    return VIEW_TYPE;
-  }
-
-  getDisplayText(): string {
-    return "Dice Roller";
-  }
-
-  getIcon(): string {
-    return "dice";
-  }
-
   async onOpen(): Promise<void> {
     const app = createApp(DemoVue).mount(this.contentEl);
     this.view = app;
   }
-}
 
-// 核心
-export default class MyPlugin extends Plugin {
-  private view: MyVueView | null = null;
-
-  settings!: MyPluginSettings;
-
-  async onload() {
-    await this.loadSettings();
-
-    this.registerView(
-      VIEW_TYPE,
-      (leaf: WorkspaceLeaf) => (this.view = new MyVueView(leaf))
-    );
-
-    // 注册事件，比如 file-menu 右键菜单
-    this.registerEvent(
-      this.app.workspace.on("file-menu", (menu, file) => {
-        menu.addItem((item) => {
-          item
-            .setTitle("开发中：上传此文章到 Github")
-            .setIcon("lightbulb")
-            .onClick(async () => {
-              // console.log(34, file.basename, file);
-              const content = await file.vault.cachedRead(file);
-              console.log(36, content);
-              new Notice("右键菜单2");
-            });
-        });
-      })
-    );
-    // 注册事件，比如 editor-menu 右键菜单
-    this.registerEvent(
-      this.app.workspace.on("editor-menu", (menu, editor, view) => {
-        menu.addItem((item) => {
-          item
-            .setTitle("右键菜单3")
-            .setIcon("lightbulb")
-            .onClick(() => {
-              console.log(35, editor, view);
-              new Notice("右键菜单3");
-            });
-        });
-      })
-    );
-
-    this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
-
-    // sidebar 注册
-    this.addRibbonIcon("lightbulb", "悬浮展示1", (event: MouseEvent) => {
-      // 注册右键菜单
-      const menu = new Menu();
-
-      menu.addItem((item) => {
-        item
-          .setTitle("右键菜单1")
-          .setIcon("lightbulb")
-          .onClick(() => {
-            new Notice("右键菜单1");
-          });
-      });
-      menu.showAtMouseEvent(event);
-      this.openMapView();
-    });
-
-    // 命令面板注册
-    // this.addCommand({
-    //   id: "xxx-id",
-    //   name: "注册命令中文名",
-    //   callback: () => this.openMapView(),
-    // });
-    this.addCommand({
-      id: "publish",
-      name: "上传到 Github",
-      callback: () => {
-        this.openMapView();
-      },
-    });
-    // This adds a settings tab so the user can configure various aspects of the plugin
-    this.addSettingTab(new SampleSettingTab(this.app, this));
+  getViewType() {
+    return VIEW_TYPE;
   }
-
-  onLayoutReady(): void {
-    if (this.app.workspace.getLeavesOfType(VIEW_TYPE).length) {
-      return;
-    }
-    this.app.workspace.getRightLeaf(false).setViewState({
-      type: VIEW_TYPE,
-    });
-  }
-
-  onunload() {
-    this.view = null;
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-
-  async openMapView() {
-    const workspace = this.app.workspace;
-    workspace.detachLeavesOfType(VIEW_TYPE);
-    const leaf = workspace.getLeaf(
-      // @ts-ignore
-      !Platform.isMobile
-    );
-    await leaf.setViewState({ type: VIEW_TYPE });
-    workspace.revealLeaf(leaf);
+  getDisplayText(): string {
+    return "这是打开标签的标题";
   }
 }
 
-class SampleSettingTab extends PluginSettingTab {
-  plugin: MyPlugin;
-
-  _appContainer: any;
-
-  constructor(app: App, plugin: MyPlugin) {
+/**
+ * 添加 设置面板
+ */
+class MySeetingTab extends PluginSettingTab {
+  plugin: GitPublisherPlugin;
+  _vueApp: VueApp | undefined;
+  // plugin: MyPlugin;
+  constructor(app: App, plugin: GitPublisherPlugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
-  hide() {
-    console.log("hide", this, this._appContainer);
-    this.containerEl.empty();
-    // this.appContainer.unmount();
-  }
-
-  display(): void {
-    console.log("this", this);
+  display() {
+    console.log("open设置面板");
 
     // 挂在 DemoVue
-
-    const _app = createApp(DemoVue);
-
+    const _app = createApp(SettingTabPage, {
+      msg: "这是传入的参数",
+      plugin: this.plugin,
+    });
+    this._vueApp = _app;
     _app.mount(this.containerEl);
+  }
+  hide() {
+    // 好像不能保留实例
+    console.log("close设置面板");
+    // this.containerEl
+    if (this._vueApp) {
+      console.log("un mount");
+      this._vueApp.unmount();
+    }
+    this.containerEl.empty();
+  }
+}
 
-    // const app =
-    this._appContainer = _app;
+const addSidebarIcon = (_this: Plugin) => {
+  // _this.addRibbonIcon;
+};
 
-    // containerEl.empty();
+const loadUserSeeting = async (_this: Plugin) => {
+  const userSetting = await _this.loadData();
+  console.log(1, "user setting", userSetting);
+};
+const VIEW_TYPE = "vue-view";
 
-    // containerEl.createEl("h2", { text: "这是一个 h2 标题" });
+export default class GitPublisherPlugin extends Plugin {
+  async onload() {
+    log("0,插件在第三方插件中启用了");
+    // 先载入配置，保证用户的设置不丢失。后续可以抽离为方法，为了容易阅读
+    // const userSetting = await this.loadData();
+    // console.log(1, "user setting", userSetting);
 
-    // new Setting(containerEl)
-    //   .setName("label1")
-    //   .setDesc("desc1")
-    //   .addText((text) =>
-    //     text
-    //       .setPlaceholder("默认暗文")
-    //       .setValue(this.plugin.settings.mySetting)
-    //       .onChange(async (value) => {
-    //         this.plugin.settings.mySetting = value;
-    //         await this.plugin.saveSettings();
-    //       })
-    //   );
+    loadUserSeeting(this);
+
+    // 保存配置
+    {
+      /**
+      // 默认是空，这里我们放入一部分信息
+      await this.saveData({ key: "val222" });
+      //const userSetting2 = await this.loadData();
+      //console.log(2, "new user setting", userSetting2);
+    loadUserSeeting(this);
+
+      // 此时发现 loadData 返回值已经是持久化的了。
+      // 后续只要不重置，使用还有，随时可以 setData 进行更新
+      // 抽离 loadSetting() saveSetting()
+     */
+    }
+
+    // 接下来开始各种注册触发方案
+    // 左侧 sidebar 具体文件单击右键
+    {
+      this.registerEvent(
+        this.app.workspace.on("file-menu", (menu, file) => {
+          if (file instanceof TFolder) {
+            // 一定进不来，为了 ts 不报错
+            console.log("It's a folder!", file);
+            return;
+          }
+
+          if (file instanceof TFile) {
+            console.log("It's a file!");
+
+            const isImg = ["png", "jpg", "jpeg", "gif"].includes(
+              file.extension
+            );
+
+            if (isImg) {
+              menu.addItem((item) => {
+                item.setTitle("图片处理").onClick(async () => {
+                  console.log("是图片", file);
+                  const content = await file.vault.cachedRead(file);
+                  console.log(content);
+                });
+              });
+            } else {
+              // 前置判断过滤，有点复杂先不过滤了，出现的地方挺多的
+              // console.log(2, menu, file.path);
+              menu.addItem((item) => {
+                item.setTitle("处理非图像内容").onClick(async () => {
+                  console.log("2,", menu);
+
+                  // 这样可以获取到文件内容¬
+                  const content = await file.vault.cachedRead(file);
+                  console.log(content);
+
+                  new Notice("右键菜单2");
+                });
+              });
+            }
+          }
+        })
+      );
+    }
+
+    // 这是编辑器右键注册
+    {
+      /** this.registerEvent(
+        this.app.workspace.on("editor-menu", (menu, file) => {
+          menu.addItem((item) => {
+            item.setTitle("333右键菜单").onClick(async () => {
+              console.log("2, trigger", menu, file);
+              // console.log(34, file.basename, file);
+              //  const content = await file.vault.cachedRead(file);
+              //  console.log(36, content);
+              new Notice("右键菜单3");
+            });
+          });
+        })
+      );*/
+    }
+
+    // 注册命令面板
+    {
+      this.addCommand({
+        id: "xxx-id",
+        // 建议包含英文名，方便快速搜索
+        name: "注册命令中文名",
+        callback: () => {
+          console.log("触发命令面板");
+          new Notice("触发命令面板");
+        },
+      });
+    }
+
+    // 注册一个页面，方便后面使用
+    {
+      this.registerView(VIEW_TYPE, (leaf) => {
+        // this.view
+        // this.view =
+        const _view = new MyVueView(leaf);
+        return _view;
+      });
+    }
+
+    // sidebar 图标注册
+    {
+      this.addRibbonIcon(
+        "lightbulb",
+        "悬浮展示1",
+        async (event: MouseEvent) => {
+          console.log("addRibbonIcon 点击触发", event);
+          // 实例化内置 menu
+          {
+            /*  const menu = new Menu();
+
+          menu.addItem((item) => {
+            item
+              .setTitle("右键菜单1")
+              .setIcon("lightbulb")
+              .onClick(() => {
+                new Notice("右键菜单1");
+              });
+          });
+          menu.show AtMouseEvent(event);*/
+          }
+          // this.openMapView();
+          // 尝试打开一个页面，需要提前声明 registerView
+          // 这里的代码可以封装为 openView，方便任何使用打开页面
+          {
+            const workspace = this.app.workspace;
+            // 先关闭所有的类型页面
+            workspace.detachLeavesOfType(VIEW_TYPE);
+            // 获取一个窗格对象，只在桌面端有效
+            const leaf = workspace.getLeaf(!Platform.isMobile);
+            // 打开新的
+            await leaf.setViewState({ type: VIEW_TYPE });
+            // focus 到 tab 上，默认看不到
+            workspace.revealLeaf(leaf);
+          }
+        }
+      );
+    }
+
+    // 添加一个设置面板  PluginSettingTab
+    {
+      const settingTab = new MySeetingTab(this.app, this);
+      this.addSettingTab(settingTab);
+    }
+
+    // 页面 layout ready 还是没理解要干啥
+    {
+      this.app.workspace.onLayoutReady(() => {
+        console.log("插件说：页面 layout ready");
+        // debugger;
+        if (this.app.workspace.getLeavesOfType("VIEW_TYPE").length) {
+          console.log("插件说， view 已经有了");
+          return;
+        }
+        console.log("插件说， view 还没有");
+
+        this.app.workspace.getRightLeaf(false).setViewState({
+          type: VIEW_TYPE,
+        });
+      });
+    }
+  }
+
+  onunload(): void {
+    log("99,插件在第三方插件中关闭了");
   }
 }
