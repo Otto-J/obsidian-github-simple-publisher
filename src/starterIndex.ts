@@ -1,6 +1,8 @@
 import {
     App,
     ItemView,
+    Menu,
+    Notice,
     Platform,
     Plugin,
     PluginSettingTab,
@@ -46,7 +48,8 @@ class MyVueView extends ItemView {
 
 // 核心
 export default class MyPlugin extends Plugin {
-    private view!: MyVueView;
+    private view: MyVueView | null = null;
+
     settings!: MyPluginSettings;
 
     async onload() {
@@ -57,14 +60,52 @@ export default class MyPlugin extends Plugin {
             (leaf: WorkspaceLeaf) => (this.view = new MyVueView(leaf))
         );
 
-        this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
-
-        // This creates an icon in the left ribbon.
-        this.addRibbonIcon("dice", "悬浮展示1", (evt: MouseEvent) =>
-            this.openMapView()
+        // 注册事件，比如 file-menu 右键菜单
+        this.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file) => {
+                menu.addItem((item) => {
+                    item.setTitle("右键菜单2")
+                        .setIcon("lightbulb")
+                        .onClick(() => {
+                            console.log(34, file);
+                            new Notice("右键菜单2");
+                        });
+                });
+            })
+        );
+        // 注册事件，比如 editor-menu 右键菜单
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item.setTitle("右键菜单3")
+                        .setIcon("lightbulb")
+                        .onClick(() => {
+                            console.log(35, editor, view);
+                            new Notice("右键菜单3");
+                        });
+                });
+            })
         );
 
-        // 在这里注册命令 This adds a simple command that can be triggered anywhere
+        this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));
+
+        // sidebar 注册
+        this.addRibbonIcon("lightbulb", "悬浮展示1", (event: MouseEvent) => {
+            // 注册右键菜单
+            const menu = new Menu();
+
+            menu.addItem((item) => {
+                item.setTitle("右键菜单1")
+                    .setIcon("lightbulb")
+                    .onClick(() => {
+                        new Notice("右键菜单1");
+                    });
+            });
+            menu.showAtMouseEvent(event);
+            this.openMapView();
+        });
+
+        // 命令面板注册
         this.addCommand({
             id: "xxx-id",
             name: "注册命令中文名",
@@ -83,7 +124,9 @@ export default class MyPlugin extends Plugin {
         });
     }
 
-    onunload() {}
+    onunload() {
+        this.view = null;
+    }
 
     async loadSettings() {
         this.settings = Object.assign(
