@@ -8,6 +8,8 @@ import {
   PluginSettingTab,
   TFile,
   TFolder,
+  stringifyYaml,
+  parseYaml,
 } from "obsidian";
 import {
   createApp,
@@ -16,6 +18,11 @@ import {
 } from "vue";
 import DemoVue from "./ui/test.vue";
 import SettingTabPage from "./ui/settingTab.vue";
+import {
+  handleFile,
+  uploadGithub,
+  useObsidianFrontmatter,
+} from "./handler/file";
 
 const debugFlag = true;
 const log = (...arg: any) => {
@@ -77,10 +84,6 @@ class MySeetingTab extends PluginSettingTab {
   }
 }
 
-const addSidebarIcon = (_this: Plugin) => {
-  // _this.addRibbonIcon;
-};
-
 const loadUserSeeting = async (_this: Plugin) => {
   const userSetting = await _this.loadData();
   console.log(1, "user setting", userSetting);
@@ -93,6 +96,9 @@ export default class GitPublisherPlugin extends Plugin {
     // 先载入配置，保证用户的设置不丢失。后续可以抽离为方法，为了容易阅读
     // const userSetting = await this.loadData();
     // console.log(1, "user setting", userSetting);
+
+    console.log(1, stringifyYaml({ a: 1, b: 2 }));
+    console.log(1, parseYaml(stringifyYaml({ a: 1, b: 2 })));
 
     loadUserSeeting(this);
 
@@ -123,7 +129,7 @@ export default class GitPublisherPlugin extends Plugin {
           }
 
           if (file instanceof TFile) {
-            console.log("It's a file!");
+            // console.log("It's a file!");
 
             const isImg = ["png", "jpg", "jpeg", "gif"].includes(
               file.extension
@@ -131,24 +137,56 @@ export default class GitPublisherPlugin extends Plugin {
 
             if (isImg) {
               menu.addItem((item) => {
-                item.setTitle("图片处理").onClick(async () => {
+                item.setTitle("3图片处理").onClick(async () => {
                   console.log("是图片", file);
                   const content = await file.vault.cachedRead(file);
                   console.log(content);
                 });
               });
             } else {
-              // 前置判断过滤，有点复杂先不过滤了，出现的地方挺多的
-              // console.log(2, menu, file.path);
               menu.addItem((item) => {
-                item.setTitle("处理非图像内容").onClick(async () => {
-                  console.log("2,", menu);
+                item.setTitle("4处理非图像内容").onClick(async () => {
+                  console.log("2,", menu, file);
+
+                  const {
+                    doesFileExist,
+                    addOrUpdateFrontMatter,
+                    currentFrontMatter,
+                  } = useObsidianFrontmatter(file, this.app);
 
                   // 这样可以获取到文件内容¬
                   const content = await file.vault.cachedRead(file);
-                  console.log(content);
+                  // console.log(content);
 
-                  new Notice("右键菜单2");
+                  // const res = handleFile(content);
+                  // if (!res.hasFrontMatterFlag) {
+                  //   new Notice("文件不包含 FrontMatter");
+                  //   return;
+                  // }
+                  // if (res.hasUnhandledImgFlag) {
+                  //   new Notice("文件包含未处理的图片");
+                  //   return;
+                  // }
+
+                  // new Notice("右键菜单2");
+                  const hash = currentFrontMatter().sha;
+                  const remoteRes = await uploadGithub(
+                    file.name,
+                    content,
+                    hash
+                  );
+                  if (!remoteRes) {
+                    return;
+                  }
+                  const sha = remoteRes.content.sha;
+                  console.log("sha", sha);
+                  if (doesFileExist()) {
+                    await addOrUpdateFrontMatter({
+                      sha: sha,
+                    });
+                  }
+
+                  // 写入 frontMatter 的 sha 里
                 });
               });
             }
