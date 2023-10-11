@@ -41,17 +41,21 @@ export const handleFile = (content: string) => {
 export const uploadGithub = async (
   filename: string,
   content: string,
-  hash: string
+  hash: string,
+  settings: Record<string, string>
 ) => {
   // 读取配置
-  const owner = "Otto-J";
-  const repo = "ob-temp";
-  const path = "content/blogs/";
-  const branch = "main";
-  const token = "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";
-  const commitMessage = `robot: Update ${filename} file`;
-  const commitName = "otto-j";
-  const commitEmail = "fa@ijust.cc";
+
+  const {
+    owner,
+    repo,
+    path,
+    branch,
+    token,
+    commitMessage,
+    commitName,
+    commitEmail,
+  } = settings;
 
   const http = axios.create({
     baseURL: "https://api.github.com",

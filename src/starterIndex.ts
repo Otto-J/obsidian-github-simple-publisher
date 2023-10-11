@@ -169,11 +169,13 @@ export default class GitPublisherPlugin extends Plugin {
                   // }
 
                   // new Notice("右键菜单2");
+                  const settings = await this.loadData();
                   const hash = currentFrontMatter().sha;
                   const remoteRes = await uploadGithub(
                     file.name,
                     content,
-                    hash
+                    hash,
+                    settings
                   );
                   if (!remoteRes) {
                     return;
@@ -183,6 +185,7 @@ export default class GitPublisherPlugin extends Plugin {
                   if (doesFileExist()) {
                     await addOrUpdateFrontMatter({
                       sha: sha,
+                      update_time: new Date().toLocaleString(),
                     });
                   }
 
