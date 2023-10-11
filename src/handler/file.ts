@@ -52,10 +52,16 @@ export const uploadGithub = async (
     path,
     branch,
     token,
+    enabled,
     commitMessage,
     commitName,
     commitEmail,
   } = settings;
+
+  if (!enabled) {
+    new Notice("Github Simple Publisher 未启用，前往设置开启");
+    return;
+  }
 
   const http = axios.create({
     baseURL: "https://api.github.com",
@@ -101,7 +107,7 @@ export const uploadGithub = async (
     })
     .catch((err) => {
       console.log("文件上传失败", err);
-      new Notice("文件上传失败");
+      new Notice("文件上传失败" + err.message);
       return null;
     });
 };

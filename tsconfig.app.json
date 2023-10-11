@@ -8,7 +8,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["vue-vine/macro"],
     "moduleResolution": "node",
     "resolveJsonModule": true
   }

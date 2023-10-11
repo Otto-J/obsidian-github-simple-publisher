@@ -11,8 +11,8 @@
   <div>{{ setting }}</div>
   <div class="setting-item mod-toggle">
     <div class="setting-item-info">
-      <div class="setting-item-name">临时禁用</div>
-      <div class="setting-item-description"></div>
+      <div class="setting-item-name">启用状态</div>
+      <div class="setting-item-description">若关闭插件不生效</div>
     </div>
     <div class="setting-item-control">
       <div
@@ -69,7 +69,7 @@
       <input
         v-model="setting.token"
         placeholder="ghp_开头"
-        type="text"
+        type="password"
         spellcheck="false"
       />
     </div>
@@ -101,19 +101,10 @@
       <input v-model="setting.commitEmail" type="text" spellcheck="false" />
     </div>
   </div>
-  <div class="setting-item">
-    <div class="setting-item-info">
-      <div class="setting-item-name">测试一下</div>
-      <!-- <div class="setting-item-description"></div> -->
-    </div>
-    <div class="setting-item-control">
-      <button class="mod-cta">测试</button>
-    </div>
-  </div>
 
-  <div class="setting-item-control">
+  <!-- <div class="setting-item-control">
     <button class="mod-cta" @click="save">保存</button>
-  </div>
+  </div> -->
 </template>
 <script lang="ts" setup>
 import { Notice, type Plugin } from "obsidian";
@@ -132,20 +123,12 @@ const setting = ref({
 
 const props = withDefaults(
   defineProps<{
-    msg: string;
     plugin: Plugin | undefined;
   }>(),
   {
-    msg: "hello",
     plugin: undefined,
   }
 );
-
-const emits = defineEmits<{
-  (event: "updateSetting", ...args: any[]): void;
-}>();
-
-// const currentSetting = ref<any>({});
 
 const loadUserSeeting = async (_this: Plugin) => {
   const userSetting = await _this.loadData();
