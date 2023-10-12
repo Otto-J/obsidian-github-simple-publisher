@@ -82,6 +82,8 @@ export const uploadGithub = async (
 
   const sha = res1.data.sha;
 
+  // const encodeContent = btoa(encodeURIComponent(content));
+  // @ts-ignore
   const encodeContent = Buffer.from(content).toString("base64");
   const payload = {
     message: commitMessage,

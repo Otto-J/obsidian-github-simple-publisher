@@ -156,4 +156,8 @@ const save = async () => {
 };
 </script>
 
-<style></style>
+<style>
+.o {
+  outline: 1px solid red;
+}
+</style>
