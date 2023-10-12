@@ -1,14 +1,8 @@
 <template>
   <h1 class="H1">Github Simple Publisher</h1>
   <h2>这里配置 Github 基本信息</h2>
-  <!-- <div class="setting-item setting-item-heading">
-    <div class="setting-item-info">
-      <div class="setting-item-name">需要按住 ⌘ 来触发悬停预览的情景</div>
-      <div class="setting-item-description">234</div>
-    </div>
-    <div class="setting-item-control"></div>
-  </div> -->
-  <div>{{ setting }}</div>
+
+  <!-- <div>{{ setting }}</div> -->
   <div class="setting-item mod-toggle">
     <div class="setting-item-info">
       <div class="setting-item-name">启用状态</div>
@@ -102,9 +96,9 @@
     </div>
   </div>
 
-  <!-- <div class="setting-item-control">
+  <div class="setting-item-control">
     <button class="mod-cta" @click="save">保存</button>
-  </div> -->
+  </div>
 </template>
 <script lang="ts" setup>
 import { Notice, type Plugin } from "obsidian";

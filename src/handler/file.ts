@@ -52,13 +52,13 @@ export const uploadGithub = async (
     path,
     branch,
     token,
-    enabled,
+    enable,
     commitMessage,
     commitName,
     commitEmail,
   } = settings;
 
-  if (!enabled) {
+  if (!enable) {
     new Notice("Github Simple Publisher 未启用，前往设置开启");
     return;
   }
@@ -75,32 +75,50 @@ export const uploadGithub = async (
 
   const apiUrl = `/repos/${owner}/${repo}/contents/${path}${filename}`;
 
-  const res1 = await http.request({
-    method: "get",
-    url: apiUrl,
-  });
-
-  const sha = res1.data.sha;
-
-  // const encodeContent = btoa(encodeURIComponent(content));
-  // @ts-ignore
-  const encodeContent = Buffer.from(content).toString("base64");
-  const payload = {
-    message: commitMessage,
-    content: encodeContent,
-    branch: branch,
-    sha,
-    // 更新文件必须的
-    // sha: hash,
-    committer: {
-      name: commitName,
-      email: commitEmail,
-    },
-  };
-
-  //    创建或更新文件
+  let sha = null as null | string;
+  // const res1 = await
   return http
-    .put(apiUrl, payload)
+    .request({
+      method: "get",
+      url: apiUrl,
+    })
+    .then((res) => {
+      sha = res.data.sha;
+    })
+    .catch((err) => {
+      // 如果是 404，说明文件不存在，需要创建
+      console.log("err", err, err.status, err.response);
+      if (err.response.status === 404) {
+        console.log("9，文件不存在，需要创建");
+        sha = null;
+        return Promise.resolve();
+      }
+    })
+    .then(() => {
+      // const encodeContent = btoa(encodeURIComponent(content));
+      // @ts-ignore
+      const encodeContent = Buffer.from(content).toString("base64");
+      const payload: any = {
+        message: commitMessage,
+        content: encodeContent,
+        branch: branch,
+
+        // 更新文件必须的
+        // sha: hash,
+        committer: {
+          name: commitName,
+          email: commitEmail,
+        },
+      };
+      if (sha) {
+        payload.sha = sha;
+      }
+      return payload;
+    })
+    .then((payload) => {
+      //    创建或更新文件
+      return http.put(apiUrl, payload);
+    })
     .then((res) => {
       console.log("44,JSON file published:");
 
