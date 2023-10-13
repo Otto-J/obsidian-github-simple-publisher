@@ -144,29 +144,24 @@ export default class GitPublisherPlugin extends Plugin {
                 });
               });
             } else {
+              console.log("2,", menu, file);
               menu.addItem((item) => {
-                item.setTitle("4处理非图像内容").onClick(async () => {
-                  console.log("2,", menu, file);
-
+                item.setTitle("上传到文件 Github").onClick(async () => {
                   const {
                     doesFileExist,
                     addOrUpdateFrontMatter,
                     currentFrontMatter,
                   } = useObsidianFrontmatter(file, this.app);
 
+                  if (doesFileExist()) {
+                    await addOrUpdateFrontMatter({
+                      update_time: new Date().toLocaleString(),
+                      create_time: new Date(file.stat.ctime).toLocaleString(),
+                    });
+                  }
+
                   // 这样可以获取到文件内容¬
                   const content = await file.vault.cachedRead(file);
-                  // console.log(content);
-
-                  // const res = handleFile(content);
-                  // if (!res.hasFrontMatterFlag) {
-                  //   new Notice("文件不包含 FrontMatter");
-                  //   return;
-                  // }
-                  // if (res.hasUnhandledImgFlag) {
-                  //   new Notice("文件包含未处理的图片");
-                  //   return;
-                  // }
 
                   // new Notice("右键菜单2");
                   const settings = await this.loadData();
@@ -181,11 +176,10 @@ export default class GitPublisherPlugin extends Plugin {
                     return;
                   }
                   const sha = remoteRes.content.sha;
-                  console.log("sha", sha);
+                  // console.log("sha", sha);
                   if (doesFileExist()) {
                     await addOrUpdateFrontMatter({
                       sha: sha,
-                      update_time: new Date().toLocaleString(),
                     });
                   }
 
