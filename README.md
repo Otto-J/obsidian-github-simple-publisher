@@ -1,13 +1,12 @@
-# obsidian-vue-starter
+# obsidian-github-simple-publisher
 
-A starter template for creating an Obsidian plugin with Vue.
+一个简单的方式，把 obsidian 的单个文件发送到 github
 
-# Features
+非常适合写博客，备份单个文件。
 
-This project comes preconfigured with [Typescript](https://www.typescriptlang.org/), [vite](https://vitejs.dev), and
-[Rollup.js](https://rollupjs.org).
+目前在还在草稿阶段，未上架官方插件。
 
-# Getting Started
+# 开发
 
 Click "use this template" to create your own fork of this repo. Make sure to reference the official sample plugin for
 information about how to get started with the Obsidian API and how to submit your plugin to the Community Plugin
